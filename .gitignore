@@ -1,0 +1,39 @@
+# Ignore the virtual environment
+venv/
+
+# Ignore all .env files
+
+
+# Ignore cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+
+# Ignore development and testing artifacts
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+*.log
+*.csv
+.tox/
+nosetests.xml
+test/
+tests/
+testing/
+
+# Ignore version control system directories
+.git/
+.gitignore
+
+# Ignore other unnecessary files
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+.DS_Store
+.idea/
+*.swp
