@@ -6,7 +6,7 @@ from app.schemas.restaurant import RestaurantCreate
 collection_ref = database.db.collection('restaurants')
 
 
-def createRestaurant(restaurant: RestaurantCreate) -> DocumentReference:
+async def createRestaurant(restaurant: RestaurantCreate) -> DocumentReference:
     restaurant_data = {
         "name": restaurant.name,
         "address": restaurant.address,
@@ -18,25 +18,21 @@ def createRestaurant(restaurant: RestaurantCreate) -> DocumentReference:
     return ref[1]
 
 
-def getRestaurant(restaurant_id: str) -> DocumentReference or None:
+async def getRestaurant(restaurant_id: str) -> DocumentReference or None:
     restaurant = collection_ref.document(restaurant_id)
     doc = restaurant.get()
     return restaurant if doc.exists else None
 
 
-def updateRestaurant(restaurant_id: str, update_data: dict) -> DocumentReference or None:
-    restaurant = getRestaurant(restaurant_id)
+async def updateRestaurant(restaurant_id: str, update_data: dict) -> DocumentReference or None:
+    restaurant = await getRestaurant(restaurant_id)
     if restaurant:
         restaurant.update(update_data)
     return restaurant
 
 
-def deleteRestaurant(restaurant_id: str) -> DocumentReference or None:
-    restaurant = getRestaurant(restaurant_id)
+async def deleteRestaurant(restaurant_id: str) -> DocumentReference or None:
+    restaurant = await getRestaurant(restaurant_id)
     if restaurant:
         restaurant.delete()
     return restaurant
-
-
-
-

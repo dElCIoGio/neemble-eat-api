@@ -19,3 +19,4 @@ def json(table_ref: DocumentReference):
             orders = list(map(lambda order: order.id, orders))
             table_data["sessionOrders"] = orders
     return table_data
+

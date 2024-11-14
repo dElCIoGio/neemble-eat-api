@@ -22,4 +22,8 @@ def json(restaurant_ref: DocumentReference):
         sessions: list[DocumentReference] = restaurant_data["sessions"]
         sessions = list(map(lambda session: session.id, sessions))
         restaurant_data["sessions"] = sessions
+    if "orders" in restaurant_data:
+        orders: list[DocumentReference] = restaurant_data["orders"]
+        orders = list(map(lambda order: order.id, orders))
+        restaurant_data["orders"] = orders
     return restaurant_data

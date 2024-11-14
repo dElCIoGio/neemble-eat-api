@@ -7,14 +7,14 @@ from app.crud import menu as meun_crud
 collection_ref = database.db.collection('categories')
 
 
-def getCategory(category_id: str) -> DocumentReference or None:
+async def getCategory(category_id: str) -> DocumentReference or None:
     category = collection_ref.document(category_id)
     doc = category.get()
     return category if doc.exists else None
 
 
-def createCategory(category: CategoryCreate) -> DocumentReference:
-    menu_ref = meun_crud.getMenu(category.menuID)
+async def createCategory(category: CategoryCreate) -> DocumentReference:
+    menu_ref = await meun_crud.getMenu(category.menuID)
     if menu_ref:
         category_data = {
             "name": category.name,
@@ -27,15 +27,15 @@ def createCategory(category: CategoryCreate) -> DocumentReference:
         return ref[1]
 
 
-def updateCategory(category_id: str, update_data: dict) -> DocumentReference or None:
-    category = getCategory(category_id)
+async def updateCategory(category_id: str, update_data: dict) -> DocumentReference or None:
+    category = await getCategory(category_id)
     if category:
         category.update(update_data)
     return category
 
 
-def deleteCategory(category_id: str) -> DocumentReference or None:
-    category = getCategory(category_id)
+async def deleteCategory(category_id: str) -> DocumentReference or None:
+    category = await getCategory(category_id)
     if category:
         category.delete()
     return category

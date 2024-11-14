@@ -25,10 +25,18 @@ COPY --from=builder /usr/src/app/app ./app
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Set the environment variable for Google credentials
-ENV GOOGLE_APPLICATION_CREDENTIALS="/usr/src/app/app/credentials/neemble-eat-db-c49af78976aa.json"
+ENV GOOGLE_APPLICATION_CREDENTIALS="/usr/src/app/app/credentials/credentials.json"
 
 # Non-root user for better security
 RUN useradd -m myuser
+
+# Create uploads directory and set permissions
+# Ensure this directory has the correct permissions for the myuser
+RUN mkdir -p /usr/src/app/app/uploads && \
+    chown -R myuser:myuser /usr/src/app/app/uploads && \
+    chmod -R 755 /usr/src/app/app/uploads
+
+# Change to non-root user
 USER myuser
 
 # Make port 8000 available

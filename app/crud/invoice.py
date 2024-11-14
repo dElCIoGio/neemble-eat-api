@@ -8,11 +8,11 @@ from app import database
 collection_ref = database.db.collection('invoices')
 
 
-def createInvoice(invoice: InvoiceCreate) -> DocumentReference or None:
+async def createInvoice(invoice: InvoiceCreate) -> DocumentReference or None:
     invoice_data = {
         "generatedTime": datetime.now(),
     }
-    session_ref = getTableSession(invoice.sessionID)
+    session_ref = await getTableSession(invoice.sessionID)
     if session_ref:
         session_data = session_ref.get().to_dict()
         orders: list[DocumentReference] = session_data["orders"] if "orders" in session_data else None
@@ -30,21 +30,21 @@ def createInvoice(invoice: InvoiceCreate) -> DocumentReference or None:
             return ref[1]
 
 
-def getInvoice(invoice_id: str):
+async def getInvoice(invoice_id: str):
     invoice = collection_ref.document(invoice_id)
     doc = invoice.get()
     return invoice if doc.exists else None
 
 
-def updateInvoice(invoice_id: str, update_data: dict):
-    invoice = getInvoice(invoice_id)
+async def updateInvoice(invoice_id: str, update_data: dict):
+    invoice = await getInvoice(invoice_id)
     if invoice:
         invoice.update(update_data)
     return invoice
 
 
-def deleteInvoice(invoice_id: str):
-    invoice = getInvoice(invoice_id)
+async def deleteInvoice(invoice_id: str):
+    invoice = await getInvoice(invoice_id)
     if invoice:
         invoice.delete()
     return invoice

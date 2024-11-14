@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr, validator, conint, HttpUrl, confloat
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
@@ -12,9 +12,10 @@ class TableSessionBase(BaseModel):
     restaurantID: str
     orders: Optional[list[str]] = None
     status: Optional[str] = None
+    total: Optional[float] = None
 
     class Config:
-        orm_mode = True
+        orm_mode = True 
 
 
 class TableSessionCreate(TableSessionBase):
@@ -24,3 +25,5 @@ class TableSessionCreate(TableSessionBase):
 class TableSessionDisplay(TableSessionBase):
     id: str
     created_time: Optional[datetime]
+
+

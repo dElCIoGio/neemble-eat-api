@@ -5,22 +5,22 @@ from datetime import datetime
 
 class RestaurantBase(BaseModel):
     name: str
-    address: str = None
+    address: str
     phoneNumber: str
-    representants: Optional[list[str]]
+    orders: Optional[list[str]] = None
+    representants: Optional[list[str]] = None
     bannerURL: str
     description: str
-    sessions: Optional[list[str]]
-    menus: Optional[list[str]]
-    tables: Optional[list[str]]
+    sessions: Optional[list[str]] = None
+    menus: Optional[list[str]] = None
+    tables: Optional[list[str]] = None
 
     class Config:
         orm_mode = True
 
 
 class RestaurantCreate(RestaurantBase):
-    name: constr(min_length=5, max_length=50)
-    phoneNumber: constr(min_length=9)
+    pass
 
 
 class RestaurantDisplay(RestaurantBase):

@@ -4,6 +4,6 @@ services:
     ports:
       - '8000:8000'
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/app/credentials/neemble-eat-db-c49af78976aa.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/app/credentials/credentials.json
     volumes:
-      - ./app/credentials/neemble-eat-db-c49af78976aa.json:/usr/src/app/app/credentials/neemble-eat-db-c49af78976aa.json:ro
+      - ./app/credentials/credentials.json:/usr/src/app/app/credentials/credentials.json:ro

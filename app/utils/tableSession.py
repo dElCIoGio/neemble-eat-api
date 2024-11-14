@@ -1,3 +1,4 @@
+from datetime import datetime
 from google.cloud.firestore_v1.document import DocumentReference
 
 
@@ -22,3 +23,14 @@ def json(table_session_ref: DocumentReference):
             table_session_data["orders"] = orders
     return table_session_data
 
+
+def serialize(table_session_ref: DocumentReference):
+    table_session_data = json(table_session_ref)
+    if table_session_data["startTime"]:
+        table_session_data["startTime"] = table_session_data["startTime"].isoformat()
+
+    if table_session_data["endTime"]:
+        if type(table_session_data["endTime"]) == datetime:
+            table_session_data["endTime"] = table_session_data["endTime"].isoformat()
+
+    return table_session_data
