@@ -14,10 +14,10 @@ def json(restaurant_ref: DocumentReference):
         tables: list[DocumentReference] = restaurant_data["tables"]
         tables = list(map(lambda table: table.id, tables))
         restaurant_data["tables"] = tables
-    if "representants" in restaurant_data:
-        representants: list[DocumentReference] = restaurant_data["representants"]
-        representants = list(map(lambda representant: representant.id, representants))
-        restaurant_data["representants"] = representants
+    if "users" in restaurant_data:
+        users: list[DocumentReference] = restaurant_data["users"]
+        users = list(map(lambda user: user.id, users))
+        restaurant_data["users"] = users
     if "sessions" in restaurant_data:
         sessions: list[DocumentReference] = restaurant_data["sessions"]
         sessions = list(map(lambda session: session.id, sessions))
@@ -27,3 +27,5 @@ def json(restaurant_ref: DocumentReference):
         orders = list(map(lambda order: order.id, orders))
         restaurant_data["orders"] = orders
     return restaurant_data
+
+

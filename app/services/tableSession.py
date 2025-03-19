@@ -9,14 +9,16 @@ from app.services import restaurant as restaurant_service
 from datetime import timedelta
 from google.cloud.firestore_v1.document import DocumentReference
 from datetime import datetime, timezone
-from schemas.tableSession import TableSessionBase
+from app.schemas.tableSession import TableSessionBase
 
 
 async def add_order(session_id: str, order: order_schema.OrderCreate) -> tuple[DocumentReference, str] or None:
-    session_ref = await table_session_crud.getTableSession(session_id)
+
+    session_ref = await table_session_crud.get_table_session(session_id)
+
     if session_ref:
         session_data = session_ref.get().to_dict()
-        order_ref = await order_crud.createOrder(order)
+        order_ref = await order_crud.create_order(order)
         if order_ref:
             order_data = order_ref.get().to_dict()
             if "orders" in session_data:
@@ -44,7 +46,7 @@ async def add_order(session_id: str, order: order_schema.OrderCreate) -> tuple[D
 
 
 async def close_session(session_id: str, status: str) -> Optional[tuple[DocumentReference, str, DocumentReference]]:
-    session_ref = await table_session_crud.getTableSession(session_id)
+    session_ref = await table_session_crud.get_table_session(session_id)
     if session_ref:
         session_data = session_ref.get().to_dict()
         if "orders" in session_data:
@@ -55,7 +57,7 @@ async def close_session(session_id: str, status: str) -> Optional[tuple[Document
                     generatedTime=None,
                     orders=None
                 )
-                invoice_ref = await invoice_crud.createInvoice(invoice)
+                invoice_ref = await invoice_crud.create_invoice(invoice)
                 session_ref.update({
                     "invoiceID": invoice_ref,
                     "status": status,
@@ -73,11 +75,11 @@ async def close_session(session_id: str, status: str) -> Optional[tuple[Document
                     tableID=table_ref.id,
                     tableNumber=None,
                     restaurantID=restaurant_ref.id,
-                    orders=None,
+                    orders=[],
                     status=None,
                     total=None
                 )
-                new_session_ref = await table_session_crud.createTableSession(new_session)
+                new_session_ref = await table_session_crud.create_table_session(new_session)
                 table_ref.update({
                     "currentSessionID": new_session_ref,
                     "sessionStatus": "Open",
@@ -99,7 +101,7 @@ async def close_session(session_id: str, status: str) -> Optional[tuple[Document
 
 
 async def get_orders(table_session_id: str) -> list[DocumentReference] or None:
-    table_session_ref = await table_session_crud.getTableSession(table_session_id)
+    table_session_ref = await table_session_crud.get_table_session(table_session_id)
     if table_session_ref:
         table_session_data = table_session_ref.get().to_dict()
         if "orders" in table_session_data:
@@ -124,18 +126,3 @@ def has_minutes_passed(table_session_json: dict, minutes: int) -> bool:
         # If any error occurs, return False
         return False
 
-
-print(has_minutes_passed({
-    "invoiceID": None,
-    "startTime": "2024-09-26T12:18:12.156283Z",
-    "endTime": None,
-    "tableID": "yGWqbx21CeGFNshYY4kw",
-    "tableNumber": 1,
-    "restaurantID": "FUHT4zQL5Umz99BN7dUI",
-    "orders": None,
-    "status": "Open",
-    "total": 0.0,
-    "id": "1cqGZBbSPr0GAAlW46C4",
-    "created_time": "2024-11-13T12:18:12.171921Z"
-},
-60))

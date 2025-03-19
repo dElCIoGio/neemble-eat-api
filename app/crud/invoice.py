@@ -1,18 +1,16 @@
 from app.schemas.invoice import InvoiceCreate
-from app.crud.tableSession import getTableSession
+from app.crud.tableSession import get_table_session
 from google.cloud.firestore_v1.document import DocumentReference
 from datetime import datetime
-from app import database
+from app.db import invoices_collection_ref
 
 
-collection_ref = database.db.collection('invoices')
 
-
-async def createInvoice(invoice: InvoiceCreate) -> DocumentReference or None:
+async def create_invoice(invoice: InvoiceCreate) -> DocumentReference or None:
     invoice_data = {
         "generatedTime": datetime.now(),
     }
-    session_ref = await getTableSession(invoice.sessionID)
+    session_ref = await get_table_session(invoice.sessionID)
     if session_ref:
         session_data = session_ref.get().to_dict()
         orders: list[DocumentReference] = session_data["orders"] if "orders" in session_data else None
@@ -26,25 +24,25 @@ async def createInvoice(invoice: InvoiceCreate) -> DocumentReference or None:
             invoice_data["sessionID"] = session_ref
             invoice_data["orders"] = orders
             invoice_data["total"] = total
-            ref = collection_ref.add(invoice_data)
+            ref = invoices_collection_ref.add(invoice_data)
             return ref[1]
 
 
-async def getInvoice(invoice_id: str):
-    invoice = collection_ref.document(invoice_id)
+async def get_invoice(invoice_id: str):
+    invoice = invoices_collection_ref.document(invoice_id)
     doc = invoice.get()
     return invoice if doc.exists else None
 
 
-async def updateInvoice(invoice_id: str, update_data: dict):
-    invoice = await getInvoice(invoice_id)
+async def update_invoice(invoice_id: str, update_data: dict):
+    invoice = await get_invoice(invoice_id)
     if invoice:
         invoice.update(update_data)
     return invoice
 
 
-async def deleteInvoice(invoice_id: str):
-    invoice = await getInvoice(invoice_id)
+async def delete_invoice(invoice_id: str):
+    invoice = await get_invoice(invoice_id)
     if invoice:
         invoice.delete()
     return invoice

@@ -6,9 +6,10 @@ from app.services import category as category_service
 
 
 async def add_category(menu_id: str, category: category_schema.CategoryCreate):
-    menu_ref = await menu_crud.getMenu(menu_id)
+    menu_ref = await menu_crud.get_menu(menu_id)
     if menu_ref:
-        category_ref = await category_crud.createCategory(category)
+        category_ref = await category_crud.create_category(category)
+
         if not category_ref:
             return None
         menu_data = menu_ref.get().to_dict()
@@ -17,7 +18,15 @@ async def add_category(menu_id: str, category: category_schema.CategoryCreate):
 
         else:
             categories: list[DocumentReference] = []
-        categories.append(category_ref)
+
+        category_name = category.name
+        for c in categories:
+            data = c.get().to_dict()
+            if data["name"] == category_name:
+                break
+        else:
+            categories.append(category_ref)
+
         update_data = {
             "categories": categories
         }
@@ -26,7 +35,7 @@ async def add_category(menu_id: str, category: category_schema.CategoryCreate):
 
 
 async def remove_category(menu_id: str, category_id: str) -> DocumentReference or None:
-    menu_ref = await menu_crud.getMenu(menu_id)
+    menu_ref = await menu_crud.get_menu(menu_id)
     category_ref = await category_service.delete_category_and_items(category_id)
     if menu_ref and category_ref:
         menu_data = menu_ref.get().to_dict()
@@ -40,7 +49,7 @@ async def remove_category(menu_id: str, category_id: str) -> DocumentReference o
 
 
 async def delete_menu_and_categories(menu_id: str) -> DocumentReference or None:
-    menu_ref = await menu_crud.getMenu(menu_id)
+    menu_ref = await menu_crud.get_menu(menu_id)
     if menu_ref:
         menu_data = menu_ref.get().to_dict()
         if "categories" in menu_data:
@@ -52,7 +61,7 @@ async def delete_menu_and_categories(menu_id: str) -> DocumentReference or None:
 
 
 async def get_parsed_menu(menu_id: str):
-    menu_ref = await menu_crud.getMenu(menu_id)
+    menu_ref = await menu_crud.get_menu(menu_id)
     if menu_ref:
         menu_data = menu_ref.get().to_dict()
         if "categories" in menu_data:

@@ -16,18 +16,18 @@ UPLOAD_DIRECTORY = base_path.parent / "uploads"
 
 @router.post("/", summary="Creates a Menu Item", response_model=menu_item_schema.MenuItemDisplay)
 async def create_menu_item(menu_item: menu_item_schema.MenuItemCreate):
-    menu_item_ref = await menu_item_crud.createMenuItem(menu_item=menu_item)
+    menu_item_ref = await menu_item_crud.create_menu_item(menu_item=menu_item)
     if menu_item_ref is None:
         raise HTTPException(status_code=404, detail="Menu item not created")
     menu_item_data = menu_item_utils.json(menu_item_ref)
     return menu_item_schema.MenuItemDisplay(**menu_item_data)
 
 
-@router.get("/{menu_item_id}", summary="Retrieve an item by its ID from the database.",
+@router.get("/{menu_item_id}", summary="Retrieve an item by its ID from the db.",
             response_model=menu_item_schema.MenuItemDisplay)
 async def read_menu_item(menu_item_id: str):
     """
-    Retrieve an item by its ID from the database.
+    Retrieve an item by its ID from the db.
 
     Args:
         menu_item_id (str): The unique identifier for the item.
@@ -36,12 +36,12 @@ async def read_menu_item(menu_item_id: str):
         Item: The retrieved item object.
 
     Raises:
-        HTTPException: 404 error if the item is not found in the database.
+        HTTPException: 404 error if the item is not found in the db.
 
     Examples:
         curl -X GET "http://localhost:8000/items/123" -H  "accept: application/json"
     """
-    menu_item_ref = await menu_item_crud.getMenuItem(menu_item_id=menu_item_id)
+    menu_item_ref = await menu_item_crud.get_menu_item(menu_item_id=menu_item_id)
     if menu_item_ref is None:
         raise HTTPException(status_code=404, detail="Menu item not found")
     menu_item_data = menu_item_utils.json(menu_item_ref)
@@ -58,11 +58,6 @@ async def update_menu_item(
         categoryID: str = Form(None),
         availability: str = Form(None),
         description: str = Form(None)):
-    print(name)
-    print(price)
-    print(categoryID)
-    print(availability)
-    print(description)
     if imageFile:
         safe_filename = imageFile.filename.replace("/", "_").replace("\\", "_").replace("..", "_")
         file_location = UPLOAD_DIRECTORY / safe_filename
@@ -75,14 +70,20 @@ async def update_menu_item(
     else:
         file_location = None
 
+    availability_aux = None
+    if availability == "True":
+        availability_aux = True
+    if availability == "False":
+        availability_aux = False
+
     menu_item_ref = await menu_item_service.update_menu_item(
         menu_item_id=menu_item_id,
         restaurant_id=restaurant_id,
         name=name,
         description=description,
         file_path=file_location,
-        categoryID=categoryID,
-        availability=True if availability == "True" else False,
+        category_id=categoryID,
+        availability=availability_aux,
         price=float(price) if price is not None else None
     )
     if file_location:
@@ -95,7 +96,7 @@ async def update_menu_item(
 
 @router.delete("/{menu_item_id}", status_code=204)
 async def delete_menu_item(menu_item_id: str):
-    menu_item_ref = await menu_item_crud.deleteMenuItem(menu_item_id)
+    menu_item_ref = await menu_item_crud.delete_menu_item(menu_item_id)
     if menu_item_ref is None:
         raise HTTPException(status_code=404, detail="Menu item not found")
     return Response(status_code=204)

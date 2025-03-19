@@ -1,13 +1,9 @@
 from google.cloud.firestore_v1.document import DocumentReference
-from app import database
+from app.db import modifications_collection_ref, modification_options_collection_ref
 from app.schemas import modification as modification_schema
 
 
-modification_collection_ref = database.db.collection("modifications")
-modification_option_collection_ref = database.db.collection("modification options")
-
-
-async def createModification(modification: modification_schema.ModificationCreate) -> DocumentReference:
+async def create_modification(modification: modification_schema.ModificationCreate) -> DocumentReference:
 	modification_data = {
 		"name": modification.name,
 		"description": modification.description,
@@ -15,31 +11,31 @@ async def createModification(modification: modification_schema.ModificationCreat
 		"imageURL": modification.imageURL,
 		"restaurantID": modification.restaurantID,
 	}
-	ref = modification_collection_ref.add(modification_data)
+	ref = modifications_collection_ref.add(modification_data)
 	return ref[1]
 
 
-async def getModification(modification_id: str) -> DocumentReference or None:
-	modification = modification_collection_ref.document(modification_id)
+async def get_modification(modification_id: str) -> DocumentReference or None:
+	modification = modifications_collection_ref.document(modification_id)
 	doc = modification.get()
 	return modification if doc.exists else None
 
 
-async def updateModification(modification_id: str, update_data: dict) -> DocumentReference or None:
-	modification = await getModification(modification_id)
+async def update_modification(modification_id: str, update_data: dict) -> DocumentReference or None:
+	modification = await get_modification(modification_id)
 	if modification:
 		modification.update(update_data)
 	return modification
 
 
-async def deleteModification(modification_id: str) -> DocumentReference or None:
-	modification = await getModification(modification_id)
+async def delete_modification(modification_id: str) -> DocumentReference or None:
+	modification = await get_modification(modification_id)
 	if modification:
 		modification.delete()
 	return modification
 
 
-async def createModificationOption(modification_option: modification_schema.ModificationOptionCreate) -> DocumentReference:
+async def create_modification_option(modification_option: modification_schema.ModificationOptionCreate) -> DocumentReference:
 	modification_option_data = {
 		"name": modification_option.name,
 		"description": modification_option.description,
@@ -47,18 +43,25 @@ async def createModificationOption(modification_option: modification_schema.Modi
 		"imageURL": modification_option.imageURL,
 		"modificationID": modification_option.modificationID,
 	}
-	ref = modification_option_collection_ref.add(modification_option_data)
+	ref = modification_options_collection_ref.add(modification_option_data)
 	return ref[1]
 
 
-async def getModificationOption(modification_option_id: str) -> DocumentReference or None:
-	modification_option = modification_option_collection_ref.document(modification_option_id)
+async def get_modification_option(modification_option_id: str) -> DocumentReference or None:
+	modification_option = modification_options_collection_ref.document(modification_option_id)
 	doc = modification_option.get()
 	return modification_option if doc.exists else None
 
 
-async def updateModificationOption(modification_option_id: str, update_data: dict) -> DocumentReference or None:
-	modification_option = await getModificationOption(modification_option_id)
+async def update_modification_option(modification_option_id: str, update_data: dict) -> DocumentReference or None:
+	modification_option = await get_modification_option(modification_option_id)
 	if modification_option:
 		modification_option.update(update_data)
+	return modification_option
+
+
+async def delete_modification_option(modification_option_id: str) -> DocumentReference or None:
+	modification_option = await get_modification_option(modification_option_id)
+	if modification_option:
+		modification_option.delete()
 	return modification_option

@@ -1,14 +1,12 @@
 from app.schemas.menuItem import MenuItemCreate
-from app import database
+from app.db import menu_items_collection_ref
 from google.cloud.firestore_v1.document import DocumentReference
 from app.crud import category as category_crud
 
 
-collection_ref = database.db.collection('menu items')
 
-
-async def createMenuItem(menu_item: MenuItemCreate) -> DocumentReference:
-    category_ref = await category_crud.getCategory(menu_item.categoryID)
+async def create_menu_item(menu_item: MenuItemCreate) -> DocumentReference:
+    category_ref = await category_crud.get_category(menu_item.categoryID)
     if category_ref:
         item_data = {
             "name": menu_item.name,
@@ -18,25 +16,25 @@ async def createMenuItem(menu_item: MenuItemCreate) -> DocumentReference:
             "imageURL": menu_item.imageURL,
             "price": menu_item.price,
         }
-        ref = collection_ref.add(item_data)
+        ref = menu_items_collection_ref.add(item_data)
         return ref[1]
 
 
-async def getMenuItem(menu_item_id: str) -> DocumentReference or None:
-    item = collection_ref.document(menu_item_id)
+async def get_menu_item(menu_item_id: str) -> DocumentReference or None:
+    item = menu_items_collection_ref.document(menu_item_id)
     doc = item.get()
     return item if doc.exists else None
 
 
-async def updateMenuItem(menu_item_id: str, update_data: dict) -> DocumentReference or None:
-    item = await getMenuItem(menu_item_id)
+async def update_menu_item(menu_item_id: str, update_data: dict) -> DocumentReference or None:
+    item = await get_menu_item(menu_item_id)
     if item:
         item.update(update_data)
     return item
 
 
-async def deleteMenuItem(menu_item_id: str) -> DocumentReference or None:
-    item = await getMenuItem(menu_item_id)
+async def delete_menu_item(menu_item_id: str) -> DocumentReference or None:
+    item = await get_menu_item(menu_item_id)
     if item:
         item.delete()
     return item

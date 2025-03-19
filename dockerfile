@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-slim AS builder
+FROM python:3.12.7-slim AS builder
 
 # Set a working directory
 WORKDIR /usr/src/app
@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 COPY ./app ./app
 
 # Final stage
-FROM python:3.9-slim AS runner
+FROM python:3.12.7-slim AS runner
 WORKDIR /usr/src/app
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/src/app/app ./app

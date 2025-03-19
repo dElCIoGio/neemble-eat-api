@@ -1,5 +1,5 @@
 from app.crud import restaurant as restaurant_crud
-from app.crud import representant as representant_crud
+from app.crud import user as user_crud
 from app.crud import table as table_crud
 from app.crud import menu as menu_crud
 from app.crud import tableSession as table_session_crud
@@ -9,8 +9,9 @@ from app.schemas import tableSession as table_session_schema
 from app.schemas import restaurant as restaurant_schema
 from app.schemas import order as order_schema
 from app.googleCloudStorage import uploadFile
-from app.utils import order as order_service
+from app.utils import order as order_utils
 from app.utils import tableSession as table_session_utils
+from app.utils import utils
 
 from google.cloud.firestore_v1.document import DocumentReference
 from datetime import datetime, timedelta, timezone
@@ -18,45 +19,44 @@ from typing import List, Tuple
 from collections import defaultdict
 import asyncio
 
+from app.utils.filter import filter_recent_documents
+
 
 async def create_restaurant(restaurant: restaurant_schema.RestaurantCreate) -> DocumentReference or None:
-    restaurant_ref = await restaurant_crud.createRestaurant(restaurant)
+    restaurant_ref = await restaurant_crud.create_restaurant(restaurant)
     if restaurant_ref:
-        bannerURL = uploadFile(
-            file_path=restaurant.bannerURL,
+        banner_url = uploadFile(
+            file_path=restaurant.banner_url,
             filename="banner.jpg",
             folder_path=f"{restaurant_ref.id}",
         )
-        if bannerURL:
-            restaurant_ref.update({"banner": bannerURL})
+        if banner_url:
+            restaurant_ref.update({"banner": banner_url})
             return restaurant_ref
         else:
             restaurant_ref.delete()
     return None
 
 
-async def assign_manager(restaurant_id: str, representant_id: str):
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
-    representant_ref = await representant_crud.getRepresentant(representant_id)
-    if restaurant_ref and representant_ref:
+async def add_user(restaurant_id: str, user_id: str):
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
+    user_ref = await user_crud.get_user(user_id)
+    if restaurant_ref and user_ref:
         restaurant_data = restaurant_ref.get().to_dict()
-        if "representants" in restaurant_data:
-            representants: list[DocumentReference] = restaurant_data["representants"]
-        else:
-            representants: list[DocumentReference] = []
-        representants.append(representant_ref)
+        users: list[DocumentReference] = restaurant_data["users"] if "users" in restaurant_data else []
+        users.append(user_ref)
         restaurant_ref.update({
-            "representants": representants
+            "users": users
         })
-        representant_ref.update({
+        user_ref.update({
             "restaurantID": restaurant_ref
         })
         return restaurant_ref
 
 
 async def add_session(table_id: str, restaurant_id: str) -> DocumentReference or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
-    table_ref = await table_crud.getTable(table_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
+    table_ref = await table_crud.get_table(table_id)
     if table_ref and restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "sessions" in restaurant_data:
@@ -73,7 +73,7 @@ async def add_session(table_id: str, restaurant_id: str) -> DocumentReference or
             orders=None,
             status=None
         )
-        session_ref = await table_session_crud.createTableSession(session)
+        session_ref = await table_session_crud.create_table_session(session)
         sessions.append(session_ref)
         restaurant_ref.update({
             "sessions": sessions
@@ -87,7 +87,7 @@ async def add_session(table_id: str, restaurant_id: str) -> DocumentReference or
 
 
 async def add_table(restaurant_id: str) -> DocumentReference or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "tables" in restaurant_data:
@@ -98,7 +98,7 @@ async def add_table(restaurant_id: str) -> DocumentReference or None:
             restaurantID=restaurant_id,
             number=len(tables) + 1,
         )
-        table_ref = await table_crud.createTable(table)
+        table_ref = await table_crud.create_table(table)
         tables.append(table_ref)
         await add_session(table_ref.id, restaurant_id)
         restaurant_ref.update({
@@ -107,15 +107,32 @@ async def add_table(restaurant_id: str) -> DocumentReference or None:
         return table_ref
 
 
+async def remove_table(table_id: str, restaurant_id: str) -> bool:
+    table_ref = await table_crud.get_table(table_id)
+    if table_ref:
+        table_data = table_ref.get().to_dict()
+        if "currentSessionID" in table_data:
+            current_session_ref: DocumentReference = table_data["currentSessionID"]
+            current_session_ref.delete()
+        if "restaurantID" in table_data:
+            restaurant_ref = table_data["restaurantID"]
+            restaurant_ref.update({
+                "tables": [ref for ref in restaurant_ref.get().to_dict()["tables"] if ref.id != table_id]
+            })
+        table_ref.delete()
+        return True
+    return False
+
+
 async def add_menu(restaurant_id: str, menu: menu_shema.MenuCreate) -> DocumentReference or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "menus" in restaurant_data:
             menus: list[DocumentReference] = restaurant_data["menus"]
         else:
             menus: list[DocumentReference] = []
-        menu_ref = await menu_crud.createMenu(menu)
+        menu_ref = await menu_crud.create_menu(menu)
         menus.append(menu_ref)
         restaurant_ref.update({
             "menus": menus
@@ -124,7 +141,7 @@ async def add_menu(restaurant_id: str, menu: menu_shema.MenuCreate) -> DocumentR
 
 
 async def get_orders(restaurant_id: str) -> list[DocumentReference] or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "sessions" in restaurant_data:
@@ -140,17 +157,24 @@ async def get_orders(restaurant_id: str) -> list[DocumentReference] or None:
         return None
 
 
-async def get_all_orders(restaurant_id: str) -> list[DocumentReference] or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+async def get_all_orders(restaurant_id: str, hours: int=24) -> list[DocumentReference] or None:
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "orders" in restaurant_data:
-            return restaurant_data["orders"]
+            orders: list[DocumentReference] = restaurant_data["orders"]
+
+            orders_in_last_24h = filter_recent_documents(
+                documents=orders,
+                hours=hours
+            )
+
+            return orders_in_last_24h
         return []
 
 
 async def get_restaurant_table_open(restaurant_id: str, table_number: int) -> DocumentReference or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "tables" in restaurant_data:
@@ -165,7 +189,7 @@ async def get_restaurant_table_open(restaurant_id: str, table_number: int) -> Do
 
 
 async def save_order(restaurant_id: str, order: DocumentReference) -> DocumentReference or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     order_exists: bool = order.get().exists
     if restaurant_ref and order_exists:
         restaurant_data = restaurant_ref.get().to_dict()
@@ -183,10 +207,11 @@ async def save_order(restaurant_id: str, order: DocumentReference) -> DocumentRe
 async def most_ordered_last_seven_days(restaurant_id: str) -> List[Tuple[str, int]]:
     orders = await get_all_orders(restaurant_id)
     if orders:
-        orders = list(map(lambda order: order_schema.OrderDisplay(**order_service.json(order)), orders))
+        orders = list(map(lambda order: order_schema.OrderDisplay(**order_utils.json(order)), orders))
         last_orders = filter_orders_within_last_7_days(orders)
         ranked_orders = orders_ranking(last_orders)
         return ranked_orders
+    return []
 
 
 def orders_ranking(orders: List[order_schema.OrderDisplay]) -> List[Tuple[str, int]]:
@@ -223,24 +248,34 @@ def filter_orders_within_last_7_days(orders: List[order_schema.OrderDisplay]) ->
     return recent_orders
 
 
-async def get_last_sessions(restautant_id: str) -> list[table_session_schema.TableSessionDisplay]:
-    not_billed = asyncio.create_task(get_all_open_sessions(restautant_id))
-    billed = asyncio.create_task(get_tables_last_billed_session(restautant_id))
+async def get_last_sessions(restaurant_id: str) -> list[table_session_schema.TableSessionDisplay]:
+    try:
+        not_billed = asyncio.create_task(get_all_open_sessions(restaurant_id))
+        billed = asyncio.create_task(get_tables_last_billed_session(restaurant_id))
 
-    open_sessions = await not_billed
-    billed_sessions = await billed
-    sessions = []
+        open_sessions = await not_billed
+        billed_sessions = await billed
+    except Exception as e:
+        print(e)
+    else:
+        print(open_sessions)
+        print(billed_sessions)
 
-    if open_sessions:
-        sessions += open_sessions
-    if billed_sessions:
-        sessions += billed_sessions
 
-    return sessions
+        sessions = []
+
+
+
+        if open_sessions:
+            sessions += open_sessions
+        if billed_sessions:
+            sessions += billed_sessions
+
+        return sessions
 
 
 async def get_all_open_sessions(restaurant_id: str) -> list[table_session_schema.TableSessionDisplay] or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "tables" in restaurant_data:
@@ -255,7 +290,6 @@ async def get_all_open_sessions(restaurant_id: str) -> list[table_session_schema
 
 async def get_tables_last_billed_session(restaurant_id: str) -> list[table_session_schema.TableSessionDisplay] or None:
     billed_sessions = await get_all_billed_sessions(restaurant_id)
-    #print("TUDO QUE CHEGOU DA PRIMEIRA FUNCÇÃO:", billed_sessions)
     table_number_by_session = {}
 
     for session in billed_sessions:
@@ -267,12 +301,11 @@ async def get_tables_last_billed_session(restaurant_id: str) -> list[table_sessi
 
     table_numbers = list(table_number_by_session.keys())
     sessions = [table_number_by_session[table_number] for table_number in table_numbers]
-    print(sessions)
     return sessions
 
 
 async def get_all_billed_sessions(restaurant_id: str) -> list[table_session_schema.TableSessionDisplay] or None:
-    restaurant_ref = await restaurant_crud.getRestaurant(restaurant_id)
+    restaurant_ref = await restaurant_crud.get_restaurant(restaurant_id)
     if restaurant_ref:
         restaurant_data = restaurant_ref.get().to_dict()
         if "sessions" in restaurant_data:
@@ -284,4 +317,48 @@ async def get_all_billed_sessions(restaurant_id: str) -> list[table_session_sche
                     sessions.append(table_session_schema.TableSessionDisplay(**table_session_utils.json(session_ref)))
 
             return sessions
+
+
+async def get_all_tables(restaurant_id: str) -> list[DocumentReference] or None:
+    restaurant_ref: DocumentReference or None = await restaurant_crud.get_restaurant(restaurant_id)
+    if restaurant_ref:
+        restaurant_data = restaurant_ref.get().to_dict()
+        if "tables" in restaurant_data:
+            return restaurant_data["tables"]
+        else:
+            restaurant_crud.update_restaurant(
+                restaurant_id,
+                {
+                    "tables": []
+                })
+            return []
+    return None
+
+
+async def get_all_users(restaurant_id: str) -> List[DocumentReference]:
+    restaurant_ref: DocumentReference or None = await restaurant_crud.get_restaurant(restaurant_id)
+    if restaurant_ref:
+        restaurant_data = restaurant_ref.get().to_dict()
+        users: List[DocumentReference] = restaurant_data["users"] if "users" in restaurant_data else []
+        return users
+    return []
+
+
+async def reset_month_orders(restaurant_id: str):
+    restaurant_ref: DocumentReference or None = await restaurant_crud.get_restaurant(restaurant_id)
+    if restaurant_ref:
+        restaurant_data = restaurant_ref.get().to_dict()
+        combined_orders = []
+        if "orders" in restaurant_data:
+            orders: list[DocumentReference] = restaurant_data["orders"]
+            current_month_orders: List[DocumentReference] = utils.get_documents_created_this_month(orders)
+            last_month_orders: List[DocumentReference] = utils.get_documents_created_last_month(orders)
+            combined_orders = current_month_orders + last_month_orders
+            
+        restaurant_ref.update({
+            "orders": list(map(lambda order: order_utils.json(order), combined_orders)),
+        })
+        return True
+    return False
+
 

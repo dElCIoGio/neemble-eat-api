@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.post("/", response_model=order_schema.OrderDisplay)
 async def create_order(order: order_schema.OrderCreate):
-    order_ref = await order_crud.createOrder(order=order)
+    order_ref = await order_crud.create_order(order=order)
     if order_ref is None:
         raise HTTPException(status_code=404, detail="Order not created")
     order_data = order_utils.json(order_ref)
@@ -21,7 +21,7 @@ async def create_order(order: order_schema.OrderCreate):
 
 @router.get("/{order_id}", response_model=order_schema.OrderDisplay)
 async def read_order(order_id: str):
-    order_ref = await order_crud.getOrder(order_id=order_id)
+    order_ref = await order_crud.get_order(order_id=order_id)
     if order_ref is None:
         raise HTTPException(status_code=404, detail="Order not found")
     order_data = order_utils.json(order_ref)
@@ -30,7 +30,7 @@ async def read_order(order_id: str):
 
 @router.put("/{order_id}", response_model=order_schema.OrderDisplay)
 async def update_order(order_id: str, order: order_schema.OrderBase):
-    order_ref = await order_crud.updateOrder(order_id, order.model_dump(exclude_unset=True))
+    order_ref = await order_crud.update_order(order_id, order.model_dump(exclude_unset=True))
     if order_ref is None:
         raise HTTPException(status_code=404, detail="Order Session not found")
     order_data = order_utils.json(order_ref)
@@ -39,7 +39,7 @@ async def update_order(order_id: str, order: order_schema.OrderBase):
 
 @router.delete("/{order_id}", status_code=204)
 async def delete_order(order_id: str):
-    order_ref = await order_crud.deleteOrder(order_id)
+    order_ref = await order_crud.delete_order(order_id)
     if order_ref is None:
         raise HTTPException(status_code=404, detail="Order not found")
     return Response(status_code=204)

@@ -1,5 +1,4 @@
 from typing import List
-
 from google.cloud.firestore_v1.document import DocumentReference
 from app.crud import category as category_crud
 from app.crud import menuItem as menu_item_crud
@@ -10,9 +9,9 @@ from app.googleCloudStorage import uploadFile
 
 
 async def add_item(category_id: str, menu_item: menu_item_schema.MenuItemCreate):
-    category_ref = await category_crud.getCategory(category_id)
+    category_ref = await category_crud.get_category(category_id)
     if category_ref:
-        item_ref = await menu_item_crud.createMenuItem(menu_item)
+        item_ref = await menu_item_crud.create_menu_item(menu_item)
         if not item_ref:
             return None
         category_data = category_ref.get().to_dict()
@@ -41,8 +40,8 @@ async def add_item(category_id: str, menu_item: menu_item_schema.MenuItemCreate)
 
 
 async def remove_item(category_id: str, menu_item_id: str) -> DocumentReference or None:
-    category_ref = await category_crud.getCategory(category_id)
-    item_ref = await menu_item_crud.getMenuItem(menu_item_id)
+    category_ref = await category_crud.get_category(category_id)
+    item_ref = await menu_item_crud.get_menu_item(menu_item_id)
     if category_ref and item_ref:
         category_data = category_ref.get().to_dict()
         if "items" in category_data:
@@ -62,7 +61,7 @@ async def remove_items(category_id: str, menu_item_ids: List[str]) -> DocumentRe
 
 
 async def delete_category_and_items(category_id: str):
-    category_ref = await category_crud.getCategory(category_id)
+    category_ref = await category_crud.get_category(category_id)
     if category_ref:
         category_data = category_ref.get().to_dict()
         if "items" in category_data:
@@ -74,21 +73,23 @@ async def delete_category_and_items(category_id: str):
 
 
 async def get_parsed_category(category_id: str):
-    category_ref = await category_crud.getCategory(category_id)
+    category_ref = await category_crud.get_category(category_id)
     if category_ref:
         category_data = category_ref.get().to_dict()
         if "items" in category_data:
             all_items = []
             items = category_data["items"]
             for item_ref in items:
-                item = await menu_item_crud.getMenuItem(item_ref.id)
+                item = await menu_item_crud.get_menu_item(item_ref.id)
                 if item:
                     item = menu_item_utils.json(item)
                     all_items.append(item)
+        else:
+            all_items = []
 
-            category_data["id"] = category_ref.id
-            category_data["menuID"] = category_data["menuID"].id
-            category_data["items"] = all_items
-            return category_data
+        category_data["id"] = category_ref.id
+        category_data["menuID"] = category_data["menuID"].id
+        category_data["items"] = all_items
+        return category_data
 
 

@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.post("/", response_model=table_session_schema.TableSessionDisplay)
 async def create_table_session(session: table_session_schema.TableSessionCreate):
-    table_session_ref: DocumentReference = await table_session_crud.createTableSession(session=session)
+    table_session_ref: DocumentReference = await table_session_crud.create_table_session(session=session)
     if table_session_ref is None:
         raise HTTPException(status_code=400, detail="There was an error creating the Session")
     table_session_data = table_session_utils.json(table_session_ref)
@@ -27,7 +27,7 @@ async def create_table_session(session: table_session_schema.TableSessionCreate)
 
 @router.get("/{session_id}", response_model=table_session_schema.TableSessionDisplay)
 async def read_table_session(session_id: str):
-    table_session_ref = await table_session_crud.getTableSession(session_id=session_id)
+    table_session_ref = await table_session_crud.get_table_session(session_id=session_id)
     if table_session_ref is None:
         raise HTTPException(status_code=404, detail="Table session not found")
     table_session_data = table_session_utils.json(table_session_ref)
@@ -36,7 +36,7 @@ async def read_table_session(session_id: str):
 
 @router.put("/{session_id}", response_model=table_session_schema.TableSessionDisplay)
 async def update_table_session(session_id: str, table_session: table_session_schema.TableSessionBase):
-    table_session_ref = await table_session_crud.updateTableSession(session_id, table_session.model_dump(exclude_unset=True))
+    table_session_ref = await table_session_crud.update_table_session(session_id, table_session.model_dump(exclude_unset=True))
     if table_session_ref is None:
         raise HTTPException(status_code=404, detail="Table Session not found")
     table_session_data = table_session_utils.json(table_session_ref)
@@ -45,7 +45,7 @@ async def update_table_session(session_id: str, table_session: table_session_sch
 
 @router.delete("/{session_id}", status_code=204)
 async def delete_table_session(session_id: str):
-    table_session_ref = await table_session_crud.deleteTableSession(session_id)
+    table_session_ref = await table_session_crud.delete_table_session(session_id)
     if table_session_ref is None:
         raise HTTPException(status_code=404, detail="Table Session not found")
     return Response(status_code=204)
@@ -56,25 +56,31 @@ async def delete_table_session(session_id: str):
 
 @router.put("/{session_id}/orders", response_model=order_schema.OrderDisplay)
 async def add_order(session_id: str, order: order_schema.OrderCreate):
-    result = await session_service.add_order(session_id, order)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Table session not found")
-
-    order_ref, restaurant_id = result
-
-    order_data = order_utils.json(order_ref)
-
-    copy_data = order_data.copy()
-    copy_data["orderTime"] = copy_data["orderTime"].isoformat()
-    json_data = json.dumps(copy_data)
-
     try:
-        await manager.broadcast(json_data, f'{restaurant_id}/order')
-        await manager.broadcast(json_data, f"{restaurant_id}/session_order")
+        result = await session_service.add_order(session_id, order)
     except Exception as error:
         print(error)
+    else:
+        if result is None:
+            raise HTTPException(status_code=404, detail="Table session not found")
 
-    return order_schema.OrderDisplay(**order_data)
+        order_ref, restaurant_id = result
+
+        order_data = order_utils.json(order_ref)
+
+        copy_data = order_data.copy()
+        copy_data["orderTime"] = copy_data["orderTime"].isoformat()
+        json_data = json.dumps(copy_data)
+
+        print(order_data)
+
+        try:
+            await manager.broadcast(json_data, f'{restaurant_id}/order')
+            await manager.broadcast(json_data, f"{restaurant_id}/session_order")
+        except Exception as error:
+            print(error)
+
+        return order_schema.OrderDisplay(**order_data)
 
 
 @router.post("/{session_id}/{status}/orders", response_model=table_session_schema.TableSessionDisplay)
@@ -96,7 +102,7 @@ async def close_session(session_id: str, status: str):
         print(error)
 
     try:
-        new_session = await table_session_crud.getTableSession(new_session_ref.id)
+        new_session = await table_session_crud.get_table_session(new_session_ref.id)
         session_data = table_session_utils.serialize(new_session)
         json_data = json.dumps(session_data)
         await manager.broadcast(json_data, f"{restaurant_id}/closed_session")

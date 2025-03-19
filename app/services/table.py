@@ -7,7 +7,7 @@ from typing import Optional
 async def get_table_session(table_id: str) -> Optional[DocumentReference]:
 
 	async def get_table_data(table_id: str) -> Optional[dict]:
-		table_ref = await table_crud.getTable(table_id)
+		table_ref = await table_crud.get_table(table_id)
 		if table_ref:
 			return table_ref.get().to_dict()
 		return None

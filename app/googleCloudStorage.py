@@ -27,3 +27,22 @@ def uploadFile(file_path, filename, folder_path, bucket_name=bucketName):
         print(error)
         return None
 
+def deleteFile(filename, folder_path, bucket_name=bucketName):
+    try:
+        # Get the bucket from the storage client
+        bucket = storage_client.get_bucket(bucket_name)
+
+        # Create the full path for the file in the bucket
+        full_path = f"{folder_path}/{filename}" if folder_path else filename
+
+        # Get the blob object for the given file path
+        blob = bucket.blob(full_path)
+
+        # Delete the blob
+        blob.delete()
+
+        # Return a message confirming deletion
+        return f"File '{full_path}' deleted from bucket '{bucket_name}'."
+    except Exception as error:
+        print(error)
+        return None

@@ -23,7 +23,7 @@ UPLOAD_DIRECTORY = base_path.parent / "uploads"
 
 @router.post("/", response_model=category_schema.CategoryDisplay)
 async def create_category(category: category_schema.CategoryCreate):
-    category_ref = await category_crud.createCategory(category=category)
+    category_ref = await category_crud.create_category(category=category)
     if category_ref is None:
         raise HTTPException(status_code=404, detail="Category not created")
     category_data = category_utils.json(category_ref)
@@ -32,7 +32,7 @@ async def create_category(category: category_schema.CategoryCreate):
 
 @router.get("/{category_id}", response_model=category_schema.CategoryDisplay)
 async def read_category(category_id: str):
-    category_ref = await category_crud.getCategory(category_id=category_id)
+    category_ref = await category_crud.get_category(category_id=category_id)
     if category_ref is None:
         raise HTTPException(status_code=404, detail="Category not found")
     category_data = category_utils.json(category_ref)
@@ -41,7 +41,7 @@ async def read_category(category_id: str):
 
 @router.put("/{category_id}", response_model=category_schema.CategoryDisplay)
 async def update_category(category_id: str, category: category_schema.CategoryBase):
-    category_ref = await category_crud.updateCategory(category_id, category.model_dump(exclude_unset=True))
+    category_ref = await category_crud.update_category(category_id, category.model_dump(exclude_unset=True))
     if category_ref is None:
         raise HTTPException(status_code=404, detail="Category not found")
     category_data = category_utils.json(category_ref)
@@ -59,48 +59,47 @@ async def delete_category(category_id: str):
 # Services
 
 
-@router.post("/menu-item/", response_model=menu_item_schema.MenuItemDisplay)
+@router.post("/add-menu-item", response_model=menu_item_schema.MenuItemDisplay)
 async def add_category_item(
         name: str = Form(...),
         description: str = Form(...),
         price: str = Form(...),
-        imageFile: UploadFile = File(...),
-        categoryID: str = Form(...),
+        image_file: UploadFile = File(...),
+        category_id: str = Form(...),
         availability: str = Form(...)
 ):
-    safe_filename = imageFile.filename.replace("/", "_").replace("\\", "_").replace("..", "_")
+    safe_filename = image_file.filename.replace("/", "_").replace("\\", "_").replace("..", "_")
     file_location = UPLOAD_DIRECTORY / safe_filename
 
     try:
         async with aiofiles.open(file_location, "wb") as buffer:
-            await buffer.write(await imageFile.read())
+            await buffer.write(await image_file.read())
 
         menu_item = menu_item_schema.MenuItemCreate(
             name=name,
             description=description,
-            categoryID=categoryID,
+            categoryID=category_id,
             availability=True if availability == "True" else False,
             price=float(price),
             imageURL=f"{file_location}"
         )
 
-        item_ref = await category_service.add_item(categoryID, menu_item)
+        item_ref = await category_service.add_item(category_id, menu_item)
         if not item_ref:
             raise HTTPException(status_code=404, detail="The menu does not exist.")
         item_data = menu_item_utils.json(item_ref)
         if file_location.exists():
             os.remove(file_location)
         return menu_item_schema.MenuItemDisplay(**item_data)
-
     except Exception as error:
         print("Error: ", error)
 
 
-async def add_category_items(items_categoryID: List[str] = Form(...),
+async def add_category_items(items_category_id: List[str] = Form(...),
                              items_name: List[str] = Form(...),
                              items_description: List[str] = Form(...),
                              items_price: List[str] = Form(...),
-                             items_imageFile: List[UploadFile] = File(...),
+                             items_image_file: List[UploadFile] = File(...),
                              items_availability: List[str] = File(...)
                              ):
     items = [
@@ -113,7 +112,7 @@ async def add_category_items(items_categoryID: List[str] = Form(...),
             "availability": bool(availability)
         }
         for category_id, name, description, price, image_file, availability
-        in zip(items_categoryID, items_name, items_description, items_price, items_imageFile, items_availability)
+        in zip(items_category_id, items_name, items_description, items_price, items_image_file, items_availability)
     ]
     new_items: List[menu_item_schema.MenuItemDisplay] = []
     for item in items:
@@ -141,12 +140,12 @@ async def add_category_items(items_categoryID: List[str] = Form(...),
 
 
 @router.post("/add-menu-items")
-async def create_items(items: List[new_item_schema.Item], imageFiles: List[UploadFile] = File(...)):
+async def create_items(items: List[new_item_schema.Item], image_files: List[UploadFile] = File(...)):
     print(items)
     try:
-        for item, imageFile in zip(items, imageFiles):
+        for item, image_file in zip(items, image_files):
             print(item)
-            contents = await imageFile.read()  # Read file content
+            contents = await image_file.read()  # Read file content
             # Process file here, e.g., save to disk
         # Further process items
         return {"status": "items received", "number_of_items": len(items)}

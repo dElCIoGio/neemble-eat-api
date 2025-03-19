@@ -1,6 +1,10 @@
+from beanie import Document
+from bson import ObjectId
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from utils.utils import partial_model
 
 
 class TableSessionBase(BaseModel):
@@ -22,8 +26,26 @@ class TableSessionCreate(TableSessionBase):
     pass
 
 
+@partial_model
+class TableSessionUpdate(TableSessionBase):
+    pass
+
+
+
+
 class TableSessionDisplay(TableSessionBase):
     id: str
     created_time: Optional[datetime]
 
 
+class TableSessionDocument(TableSessionBase, Document):
+
+    class Settings:
+        name = "table_sessions"
+        bson_encoders = {ObjectId: str}
+        indexes = [
+            {"keys": [("tableID", 1)], "name": "table_id_index"},
+            {"keys": [("restaurantID", 1)], "name": "restaurant_id_index"},
+            {"keys": [("status", 1)], "name": "session_status_index"},
+            {"keys": [("startTime", -1)], "name": "session_start_time_index"},
+        ]

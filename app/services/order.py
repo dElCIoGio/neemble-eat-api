@@ -10,7 +10,7 @@ event = Event()
 
 
 async def set_order_as_in_preparation(order_id: str) -> DocumentReference or None:
-    order_ref = await order_crud.updateOrder(order_id, {"prepStatus": "In Progress"})
+    order_ref = await order_crud.update_order(order_id, {"prepStatus": "In Progress"})
     return order_ref
 
 
@@ -21,7 +21,7 @@ async def close_session(session_id: str):
 
 
 async def cancel_order(order_id: str, background_tasks: BackgroundTasks) -> DocumentReference or None:
-    order_ref = await order_crud.updateOrder(order_id, {"prepStatus": "Cancelled"})
+    order_ref = await order_crud.update_order(order_id, {"prepStatus": "Cancelled"})
     order_data = order_ref.get().to_dict()
     session_ref: DocumentReference = order_data["sessionID"]
 
@@ -38,6 +38,6 @@ async def cancel_order(order_id: str, background_tasks: BackgroundTasks) -> Docu
 
 
 async def set_order_as_done(order_id: str) -> DocumentReference or None:
-    order_ref = await order_crud.updateOrder(order_id, {"prepStatus": "Done"})
+    order_ref = await order_crud.update_order(order_id, {"prepStatus": "Done"})
     return order_ref
 

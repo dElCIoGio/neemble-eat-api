@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.post("/", response_model=table_schema.TableDisplay)
 async def create_table(table: table_schema.TableCreate):
-    table_ref = await table_crud.createTable(table=table)
+    table_ref = await table_crud.create_table(table=table)
     if table_ref is None:
         raise HTTPException(status_code=400, detail="There was an error creating the table.")
     table_data = table_utils.json(table_ref)
@@ -20,7 +20,7 @@ async def create_table(table: table_schema.TableCreate):
 
 @router.get("/{table_id}", response_model=table_schema.TableDisplay)
 async def read_table(table_id: str):
-    table_ref = await table_crud.getTable(table_id=table_id)
+    table_ref = await table_crud.get_table(table_id=table_id)
     if table_ref is None:
         raise HTTPException(status_code=404, detail="Table not found")
     table_data = table_utils.json(table_ref)
@@ -29,7 +29,7 @@ async def read_table(table_id: str):
 
 @router.put("/{table_id}", response_model=table_schema.TableDisplay)
 async def update_table(table_id: str, table: table_schema.TableBase):
-    table_ref = await table_crud.updateTable(table_id, table.model_dump(exclude_unset=True))
+    table_ref = await table_crud.update_table(table_id, table.model_dump(exclude_unset=True))
     if table_ref is None:
         raise HTTPException(status_code=404, detail="Table not found")
     table_data = table_utils.json(table_ref)
@@ -38,7 +38,7 @@ async def update_table(table_id: str, table: table_schema.TableBase):
 
 @router.delete("/{table_id}", status_code=204)
 async def delete_table(table_id: str):
-    table_ref = await table_crud.deleteTable(table_id)
+    table_ref = await table_crud.delete_table(table_id)
     if table_ref is None:
         raise HTTPException(status_code=404, detail="Table not found")
     return Response(status_code=204)
@@ -51,3 +51,7 @@ async def get_table_session(table_id: str):
         raise HTTPException(status_code=404, detail="Table not found")
     session_data = table_session_utils.json(table_session_ref)
     return table_session_schema.TableSessionDisplay(**session_data)
+
+@router.get("/tables/test")
+async def test():
+    return {"test": "test"}

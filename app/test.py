@@ -1,82 +1,73 @@
-#from database.database import SessionLocal
-#from database.models import *
-#import decimal
-#
-#session = SessionLocal()
-#
-## Create and add a RestaurantRepresentant
-#representant = Representant(firstName="John",
-#                            lastName="Doe",
-#                            role="Manager",
-#                            phone_number="1234567890",
-#                            UUID="thhjvburrtcyvubhjin7g")
-#
-#session.add(representant)
-#session.commit()
-#
-## Create and add a Restaurant
-#restaurant = Restaurant(name="Best Eats", address="123 Tasty St", phone_number="+440987654321",
-#                        restaurantRepresentantId=representant.id)
-#session.add(restaurant)
-#session.commit()
-#
-## Create and add a Menu
-#menu = Menu(restaurantId=restaurant.id, description="Main Menu", name="Dinner")
-#session.add(menu)
-#session.commit()
-#
-## Create and add a Category
-#category = Category(name="Appetizers", description="Starters", menuId=menu.id)
-#session.add(category)
-#session.commit()
-#
-## Create and add a MenuItem
-#menu_item = MenuItem(name="Spring Rolls", description="Crispy rolls", price=decimal.Decimal("5.99"),
-#                     category_id=category.id, image_url="http://example.com/springrolls.jpg")
-#session.add(menu_item)
-#session.commit()
-#
-## Create and add a Table
-#table = Table(link="http://example.com/table1", restaurantId=restaurant.id)
-#session.add(table)
-#session.commit()
-#
-## Create and add a Session
-#tableSession = TableSession(startTime=datetime.now(), billed=False, tableId=table.id, restaurantId=restaurant.id)
-#session.add(tableSession)
-#session.commit()
-#
-## Create and add an Order
-#order = Order(orderTime=datetime.now(), delivered=False, sessionId=tableSession.id)
-#session.add(order)
-#session.commit()
-#
-## Create and add an OrderItem
-#order_item = OrderItem(quantity=2, menuItemId=menu_item.id, orderId=order.id)
-#session.add(order_item)
-#session.commit()
-#
-## Create and add an Invoice
-#invoice = Invoice(total=decimal.Decimal("20.00"), generatedTime=datetime.now())
-#session.add(invoice)
-#session.commit()
-#
-## Associate Invoice with Session
-#session.invoiceId = invoice.id
-#session.commit()
-#
-## Query to verify
-#print(session.query(Restaurant).all()[0].name)
-#
-#session.close()
-#
+from google.cloud import firestore
+from google.cloud.firestore_v1 import DocumentReference
+import asyncio
 
-from pydantic_extra_types.phone_numbers import PhoneNumber
+from app.schemas import tableSession as table_session_schema
+from app.crud import restaurant as restaurant_crud
+from app.crud import order as order_crud
+from app.crud import tableSession as session_crud
 
-number: str = "07927300098"
-from phonenumbers import parse, geocoder, carrier, phonenumberutil
 
-x = parse(number, "GB")
-print(x)
-print(geocoder.description_for_number(x, "en"))
-#print(carrier.name_for_number(x, "en"))
+
+def reset_orders_and_sessions():
+
+    # Get all restaurant documents
+    restaurants = restaurant_crud.get_all_restaurants()
+
+    for restaurant in restaurants:
+        restaurant_ref = restaurant.reference
+        restaurant_ref.update({
+            "orders": [],
+            "sessions": []
+        })
+        print(f"Updated restaurant: {restaurant.id}")
+
+
+def delete_orders():
+    orders = order_crud.get_orders()
+    for order in orders:
+        order_ref = order.reference
+        order_ref.delete()
+        print(f"Deleted order: {order.id}")
+
+
+def delete_table_sessions():
+    table_sessions = session_crud.get_table_sessions()
+    for table_session in table_sessions:
+        table_session_ref = table_session.reference
+        table_session_ref.delete()
+        print(f"Deleted table session: {table_session.id}")
+
+
+
+async def assign():
+    restaurants = restaurant_crud.get_all_restaurants()
+    for restaurant in restaurants:
+        restaurant_ref: DocumentReference = restaurant.reference
+        restaurant_id = restaurant_ref.id
+        if restaurant_id == "FUHT4zQL5Umz99BN7dUI":
+            restaurant_data = restaurant_ref.get().to_dict()
+            tables_refs: list[DocumentReference] = restaurant_data["tables"]
+
+            table_sessions = []
+
+            for table_ref in tables_refs:
+                table_data = table_ref.get().to_dict()
+                table_session = table_session_schema.TableSessionCreate(
+                    tableID=table_ref.id,
+                    tableNumber=table_data["number"],
+                    restaurantID=restaurant_id,
+                    orders=[],
+                )
+                table_session_ref = await session_crud.create_table_session(table_session)
+                table_sessions.append(table_session_ref)
+
+                table_ref.update({
+                    "currentSessionID": table_session_ref,
+                })
+
+                print(table_session)
+
+            restaurant_ref.update({
+                "sessions": table_sessions,
+            })
