@@ -3,7 +3,7 @@ services:
     build: .
     ports:
       - '8000:8000'
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/app/credentials/credentials.json
+    env_file:
+      - .env
     volumes:
       - ./app/credentials/credentials.json:/usr/src/app/app/credentials/credentials.json:ro

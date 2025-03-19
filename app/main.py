@@ -21,21 +21,21 @@ import json
 from typing import Callable
 
 
-from websocket.manager import manager
+from app.websocket.manager import manager
 
-from api.business import router as business_router
-from api.invitationToken import router as invitation_token_router
-from api.user import router as user_router
-from api.restaurant import router as restaurant_router
-from api.category import router as category_router
-from api.invoice import router as invoice_router
-from api.menu import router as menu_router
-from api.table import router as table_router
-from api.order import router as order_router
-from api.tableSession import router as table_session_router
-from api.menuItem import router as menu_item_router
-from api.page import router as page_router
-from api.analytics import router as analytics_router
+from app.api.business import router as business_router
+from app.api.invitationToken import router as invitation_token_router
+from app.api.user import router as user_router
+from app.api.restaurant import router as restaurant_router
+from app.api.category import router as category_router
+from app.api.invoice import router as invoice_router
+from app.api.menu import router as menu_router
+from app.api.table import router as table_router
+from app.api.order import router as order_router
+from app.api.tableSession import router as table_session_router
+from app.api.menuItem import router as menu_item_router
+from app.api.page import router as page_router
+from app.api.analytics import router as analytics_router
 
 
 @asynccontextmanager

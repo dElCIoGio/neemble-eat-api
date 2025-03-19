@@ -54,8 +54,11 @@ class GoogleCloudSettings(BaseSettings):
 
     class Config:
         case_sensitive = True
+        env_file = ".env"
+
 
 class Settings(Metadata, TokensSettings, Collections, GoogleCloudSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+        env_file_encoding = "utf-8"

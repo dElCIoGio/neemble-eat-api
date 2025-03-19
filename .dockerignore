@@ -30,8 +30,6 @@ testing/
 .git/
 
 # Ignore other unnecessary files
-Dockerfile*
-.dockerignore
 docker-compose*.yml
 .DS_Store
 .idea/
