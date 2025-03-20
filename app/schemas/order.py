@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime
 
 from app.schemas.document_id import DocumentId
-from utils.utils import partial_model
+from app.utils.utils import partial_model
 
 
 class OrderBase(BaseModel):

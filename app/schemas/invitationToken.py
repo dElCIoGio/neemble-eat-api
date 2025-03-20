@@ -7,8 +7,8 @@ from google.cloud.firestore_v1 import DocumentReference
 from pydantic import BaseModel, confloat, Field
 from typing import Optional
 
-from schemas.document_id import DocumentId
-from utils.utils import partial_model
+from app.schemas.document_id import DocumentId
+from app.utils.utils import partial_model
 
 
 class InvitationTokenBase(BaseModel):

@@ -4,8 +4,8 @@ from pydantic import BaseModel, constr
 from typing import Optional, List
 from datetime import datetime
 from app.schemas import menuItem as menu_item_schema
-from schemas.document_id import DocumentId
-from utils.utils import partial_model
+from app.schemas.document_id import DocumentId
+from app.utils.utils import partial_model
 
 
 class CategoryBase(BaseModel):

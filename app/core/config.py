@@ -1,26 +1,24 @@
-from dotenv import load_dotenv
-
+from dotenv import load_dotenv, find_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 import sys
+
+# DOTENV = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(find_dotenv(usecwd=True))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname('app'), '..')))
 
-dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-load_dotenv(dotenv_path)
 
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
+class Settings(BaseSettings):
 
-# Load .env file automatically
-load_dotenv()
 
-class Metadata(BaseSettings):
+    # App Config
     TITLE: str = "Neemble Eat API"
-    DESCRIPTION: str = "API for Neemble Eat"
+    DESCRIPTION: str = "API - Neemble Eat"
     VERSION: str = "1.0.0"
     FRONTEND_URL: str = "https://neemble-eat.ao"
     TIMEZONE: str = "Africa/Luanda"
 
-class Collections(BaseSettings):
+    # Firestore Collections
     CATEGORIES: str = "categories"
     INVITATION_TOKENS: str = "invitation tokens"
     INVOICES: str = "invoices"
@@ -36,29 +34,16 @@ class Collections(BaseSettings):
     TABLE_SESSIONS: str = "sessions"
     USERS: str = "users"
 
-class TokensSettings(BaseSettings):
+    # Goggle Cloud Config
+    GOOGLE_CLOUD_CREDENTIALS: str
+
+
+    # Additional Config
     TOKENS_SECRET_KEY: str = "0wxK3rMDpk"
 
-class GoogleCloudSettings(BaseSettings):
-    GOOGLE_CLOUD_TYPE: str
-    GOOGLE_CLOUD_PROJECT_ID: str
-    GOOGLE_CLOUD_PRIVATE_KEY_ID: str
-    GOOGLE_CLOUD_PRIVATE_KEY: str
-    GOOGLE_CLOUD_CLIENT_EMAIL: str
-    GOOGLE_CLOUD_CLIENT_ID: str
-    GOOGLE_CLOUD_AUTH_URI: str
-    GOOGLE_CLOUD_TOKEN_URI: str
-    GOOGLE_CLOUD_AUTH_PROVIDER_X509_CERT_URL: str
-    GOOGLE_CLOUD_CLIENT_X509_CERT_URL: str
-    GOOGLE_CLOUD_UNIVERSI_DOMAIN: str = "googleapis.com"
+    model_config = SettingsConfigDict(case_sensitive=True, env_file_encoding='utf-8')
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-
-
-class Settings(Metadata, TokensSettings, Collections, GoogleCloudSettings):
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # class Config:
+    #     case_sensitive = True
+    #     env_file = DOTENV
+    #     env_file_encoding = 'utf-8'

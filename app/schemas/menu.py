@@ -4,8 +4,8 @@ from pydantic import BaseModel, EmailStr, constr, validator, conint, HttpUrl, co
 from typing import Optional
 from datetime import datetime
 from app.schemas import category as category_schema
-from schemas.document_id import DocumentId
-from utils.utils import partial_model
+from app.schemas.document_id import DocumentId
+from app.utils.utils import partial_model
 
 
 class MenuBase(BaseModel):

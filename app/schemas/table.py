@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr, constr, validator, conint, HttpUrl, co
 from datetime import datetime
 from typing import Optional
 
-from utils.utils import partial_model
+from app.utils.utils import partial_model
 
 
 class TableBase(BaseModel):

@@ -5,8 +5,8 @@ from pydantic import BaseModel, EmailStr, constr
 from typing import Optional
 from datetime import datetime
 from app.schemas import menu as menu_schema
-from schemas.document_id import DocumentId
-from utils.utils import partial_model
+from app.schemas.document_id import DocumentId
+from app.utils.utils import partial_model
 
 
 class RestaurantBase(BaseModel):

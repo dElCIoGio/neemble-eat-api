@@ -5,7 +5,7 @@ from bson import ObjectId
 from pydantic import BaseModel, confloat, Field
 from typing import Optional
 
-from utils.utils import partial_model
+from app.utils.utils import partial_model
 
 
 class InvoiceBase(BaseModel):

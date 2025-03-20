@@ -20,7 +20,7 @@ from fastapi_cache.decorator import cache
 import json
 from typing import Callable
 
-
+from app.core.dependencies import get_settings
 from app.websocket.manager import manager
 
 from app.api.business import router as business_router
@@ -38,6 +38,8 @@ from app.api.page import router as page_router
 from app.api.analytics import router as analytics_router
 
 
+settings = get_settings()
+
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     print("Starting up...")
@@ -52,7 +54,9 @@ async def lifespan(application: FastAPI):
     print("Shutting down...")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan,
+              title=settings.TITLE,
+              description=settings.DESCRIPTION)
 
 
 class CORSHandler(APIRoute):

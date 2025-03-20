@@ -9,10 +9,13 @@ import firebase_admin
 from firebase_admin import auth, credentials
 import os
 
-path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "credentials/credentials.json")
+
+certi = get_google_cloud_credentials()
+
+
 gc_cred = get_google_cloud_credentials()
 
-cred = credentials.Certificate.from_dict(gc_cred)
+cred = credentials.Certificate(certi)
 firebase_admin.initialize_app(cred)
 
 __all__ = [

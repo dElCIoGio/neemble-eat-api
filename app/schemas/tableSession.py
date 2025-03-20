@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-from utils.utils import partial_model
+from app.utils.utils import partial_model
 
 
 class TableSessionBase(BaseModel):

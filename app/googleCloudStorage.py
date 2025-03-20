@@ -1,11 +1,15 @@
 import os
 from google.cloud import storage
+from google.oauth2 import service_account
+
+from app.core.dependencies import get_google_cloud_credentials
+
+certi = get_google_cloud_credentials()
 
 
-if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials/credentials.json"
+credentials = service_account.Credentials.from_service_account_info(certi)
 
-storage_client = storage.Client()
+storage_client = storage.Client(credentials=credentials)
 bucketName = "neemble-eat-image-storage"
 
 

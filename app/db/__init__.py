@@ -5,11 +5,14 @@ from google.cloud.firestore_v1.client import Client
 from app.core.dependencies import get_settings, get_google_cloud_credentials
 
 
+certi = get_google_cloud_credentials()
+
+
 settings = get_settings()
 gc_cred = get_google_cloud_credentials()
 
 # Use a service account_
-cred = credentials.Certificate(gc_cred)
+cred = credentials.Certificate(certi)
 firebase_admin.initialize_app(cred)
 
 # Initialize Firestore
@@ -29,7 +32,6 @@ restaurants_collection_ref: CollectionReference = db.collection(settings.RESTAUR
 tables_collection_ref: CollectionReference = db.collection(settings.TABLES)
 table_sessions_collection_ref: CollectionReference = db.collection(settings.TABLE_SESSIONS)
 users_collection_ref: CollectionReference = db.collection(settings.USERS)
-representants_collection_ref: CollectionReference = db.collection("representants")
 
 
 
