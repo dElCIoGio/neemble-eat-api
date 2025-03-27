@@ -15,6 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application source code
 COPY ./app ./app
 
+
+
 # Final stage
 FROM python:3.12.7-slim AS runner
 
@@ -23,6 +25,9 @@ WORKDIR /usr/src/app
 # Copy the virtual environment and application code
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/src/app/app ./app
+
+# Copy .env
+COPY .env .env
 
 # Ensure virtual environment is used
 ENV PATH="/opt/venv/bin:$PATH"
@@ -39,7 +44,12 @@ RUN mkdir -p /usr/src/app/app/uploads && \
 USER myuser
 
 # Expose the application port
+
+ENV PORT 8000
+ENV DOTENV_PATH="/usr/src/app/.env"
+
+
 EXPOSE 8000
 
 # Run the FastAPI app with Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port 8000

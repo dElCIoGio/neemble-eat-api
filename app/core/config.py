@@ -4,13 +4,13 @@ import os
 import sys
 
 # DOTENV = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(find_dotenv(usecwd=True))
+from pathlib import Path
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname('app'), '..')))
 
 
 class Settings(BaseSettings):
-
-
     # App Config
     TITLE: str = "Neemble Eat API"
     DESCRIPTION: str = "API - Neemble Eat"
@@ -35,15 +35,10 @@ class Settings(BaseSettings):
     USERS: str = "users"
 
     # Goggle Cloud Config
-    GOOGLE_CLOUD_CREDENTIALS: str
+    GOOGLE_CLOUD_CREDENTIALS: str = os.getenv("GOOGLE_CLOUD_CREDENTIALS")
 
 
     # Additional Config
     TOKENS_SECRET_KEY: str = "0wxK3rMDpk"
 
     model_config = SettingsConfigDict(case_sensitive=True, env_file_encoding='utf-8')
-
-    # class Config:
-    #     case_sensitive = True
-    #     env_file = DOTENV
-    #     env_file_encoding = 'utf-8'

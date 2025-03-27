@@ -38,6 +38,10 @@ from app.api.page import router as page_router
 from app.api.analytics import router as analytics_router
 
 
+import os
+print("ENV CHECK:", os.getenv("GOOGLE_CLOUD_CREDENTIALS"))
+
+
 settings = get_settings()
 
 @asynccontextmanager
