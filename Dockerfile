@@ -26,9 +26,6 @@ WORKDIR /usr/src/app
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/src/app/app ./app
 
-# Copy .env
-COPY .env .env
-
 # Ensure virtual environment is used
 ENV PATH="/opt/venv/bin:$PATH"
 

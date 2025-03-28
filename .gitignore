@@ -5,6 +5,7 @@ venv
 # Ignore all .env files
 .env
 *.env
+service-account.json
 
 # Ignore cache files
 __pycache__/
@@ -36,3 +37,4 @@ docker-compose*.yml
 .DS_Store
 .idea/
 *.swp
+qodana.yaml

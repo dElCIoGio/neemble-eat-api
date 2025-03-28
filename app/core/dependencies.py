@@ -12,10 +12,6 @@ def get_settings():
 def get_google_cloud_credentials():
     settings = get_settings()
 
-    credentials = json.loads(settings.GOOGLE_CLOUD_CREDENTIALS)
-
-    credentials["private_key"] = credentials["private_key"].replace("\\n", "\n")
-
-    return credentials
+    return settings.GOOGLE_CLOUD_CREDENTIALS
 
 

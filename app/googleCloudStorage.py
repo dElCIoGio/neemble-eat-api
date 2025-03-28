@@ -10,7 +10,7 @@ certi = get_google_cloud_credentials()
 credentials = service_account.Credentials.from_service_account_info(certi)
 
 storage_client = storage.Client(credentials=credentials)
-bucketName = "neemble-eat-image-storage"
+bucketName = "neemble-eat-storage"
 
 
 def uploadFile(file_path, filename, folder_path, bucket_name=bucketName):

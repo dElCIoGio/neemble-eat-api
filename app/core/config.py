@@ -1,3 +1,6 @@
+import json
+from typing import Any
+
 from dotenv import load_dotenv, find_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
@@ -8,6 +11,16 @@ from pathlib import Path
 env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname('app'), '..')))
+
+
+creds_json = {}
+
+secret_path = '/var/secrets/GOOGLE_CLOUD_CREDENTIALS'
+if os.path.exists(secret_path):
+    with open(secret_path) as f:
+        creds_json = json.load(f)
+else:
+    print("⚠️ WARNING: GOOGLE_CLOUD_CREDENTIALS not found at", secret_path)
 
 
 class Settings(BaseSettings):
@@ -35,10 +48,11 @@ class Settings(BaseSettings):
     USERS: str = "users"
 
     # Goggle Cloud Config
-    GOOGLE_CLOUD_CREDENTIALS: str = os.getenv("GOOGLE_CLOUD_CREDENTIALS")
-
+    GOOGLE_CLOUD_CREDENTIALS: dict[str, Any] = creds_json
 
     # Additional Config
     TOKENS_SECRET_KEY: str = "0wxK3rMDpk"
 
     model_config = SettingsConfigDict(case_sensitive=True, env_file_encoding='utf-8')
+
+

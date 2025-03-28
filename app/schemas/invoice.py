@@ -35,3 +35,4 @@ class InvoiceDocument(InvoiceBase, Document):
 class InvoiceDisplay(InvoiceBase):
     id: str
     created_time: Optional[datetime]
+
