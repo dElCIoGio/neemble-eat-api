@@ -97,7 +97,7 @@ app.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://neemble-eat.ao", "http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
