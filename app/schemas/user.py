@@ -43,6 +43,25 @@ class UserBase(BaseModel):
     restaurantID: Optional[str] = None
 
 
+    @staticmethod
+    def from_doc(doc: DocumentReference) -> "UserDisplay":
+        doc_data = doc.get().to_dict()
+        restaurant_ref: DocumentReference = doc_data["restaurantID"]
+        restaurant_id = restaurant_ref.id
+        _id = doc.id
+        return UserDisplay(
+            id=_id,
+            phoneNumber=doc_data["phoneNumber"],
+            UUID=doc_data["UUID"],
+            firstName=doc_data["firstName"],
+            lastName=doc_data["lastName"],
+            email=doc_data["email"],
+            restaurantID=restaurant_id,
+            role=doc_data["role"],
+            created_time=doc.get().create_time.isoformat()
+        )
+
+
 class UserCreate(UserBase):
     firstName: constr(min_length=1, max_length=40)
     lastName: constr(min_length=1, max_length=40)
